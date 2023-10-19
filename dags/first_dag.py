@@ -31,7 +31,7 @@ target_dataset_name = "greenhat_summary"
 target_table_name = "readings_by_street"
 location = "us-central1"
 project_id = "composer-workshop"
-gcs_bucket = "{{params.output_gcs_bucket}}"
+gcs_bucket = "{{ params.output_gcs_bucket }}"
 csv_output_file = f"gs://{gcs_bucket}/street_readings.csv"
 avro_output_file = f"gs://{gcs_bucket}/street_readings.avro"
 
@@ -86,9 +86,10 @@ with models.DAG(
          "output_gcs_bucket": Param("composer-workshop-data-output", type="string")
      },
 ) as dag:
-    def greeting():
+    def greeting(**kwargs):
         import logging
-        logging.info("Goodbye!")
+        greeting = kwargs["greeting"]
+        logging.info(f"Goodbye {greeting}!!!")
 
     # Create BigQuery output dataset.
     make_bq_dataset = bash.BashOperator(
@@ -129,8 +130,10 @@ with models.DAG(
     )
 
     this_is_the_end = python_operator.PythonOperator(
-        task_id="goodbye",
+        task_id="goodbye", 
+        provide_context=True,
         python_callable=greeting,
+        op_kwargs={'greeting': '{{ var.value.greeting }}'},
     )
 
 
